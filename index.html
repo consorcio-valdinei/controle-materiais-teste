@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle de Materiais, TMD e HT — 7º BPM/M</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#172033;background:#f1f5f9}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:1200px;margin:auto}header{background:#0f172a;color:#fff;padding:22px;border-bottom:5px solid #dc2626;border-radius:16px;margin-bottom:18px}h1{margin:0;font-size:clamp(1.4rem,4vw,2rem)}header p{margin:7px 0 0;color:#cbd5e1}.panel{background:#fff;border:1px solid #dbe2ea;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #0f172a0a}.grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,2fr);gap:16px}.hidden{display:none!important}label{display:block;font-weight:650;font-size:.9rem;margin:11px 0 5px}input,select,button{font:inherit;border-radius:8px;padding:10px;border:1px solid #cbd5e1}input,select{width:100%;background:white}button{font-weight:700;cursor:pointer;background:#e2e8f0;color:#0f172a}button.primary{background:#0f172a;color:#fff;width:100%;margin-top:14px}button.green{background:#047857;color:white}button.red{background:#b91c1c;color:white}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.tools input{flex:1;min-width:190px}.check{display:flex;gap:8px;align-items:center;font-weight:400;margin:8px 0}.check input{width:auto}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:670px;font-size:.88rem}th,td{text-align:left;padding:10px;border-bottom:1px solid #e2e8f0;vertical-align:top}th{background:#f1f5f9;font-size:.75rem;text-transform:uppercase}.pending-row{background:#fff1f2;border-left:5px solid #dc2626}.pending-row:hover{background:#ffe4e6}.returned-row{background:#fff}.pending{color:#b91c1c;font-weight:800}.returned{color:#047857;font-weight:800}.muted{color:#64748b;font-size:.88rem}.message{padding:10px;border-radius:8px;background:#eff6ff;margin:10px 0;white-space:pre-wrap}.statusbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.checklist{border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:10px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:820px){.grid{grid-template-columns:1fr}body{padding:9px}.panel{padding:13px}}
+</style>
+</head>
+<body><main>
+<header><h1>Controle de Materiais, TMD e HT</h1><p><strong>7º BPM/M</strong> · Sistema compartilhado</p><p class="muted">Acesso restrito a usuários autorizados</p></header>
+<section id="config" class="panel">
+<h2>Configuração inicial</h2><p>Preencha o endereço do projeto Supabase e a chave pública (publishable/anon). Não cole aqui nem publique chaves secretas ou service_role.</p>
+<label for="projectUrl">URL do projeto Supabase</label><input id="projectUrl" placeholder="https://seu-projeto.supabase.co">
+<label for="publishableKey">Chave pública (publishable/anon)</label><input id="publishableKey" placeholder="sb_publishable_... ou anon key" autocomplete="off">
+<button id="saveConfig" class="primary">Conectar ao projeto</button>
+<p class="muted">Esses valores são guardados neste navegador. A chave pública só é segura com RLS e permissões corretamente configuradas no banco.</p>
+</section>
+<section id="auth" class="panel hidden">
+<h2>Entrar no sistema</h2><label for="email">E-mail autorizado</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required>
+<div class="tools" style="margin-top:12px"><button id="login" class="primary" style="width:auto;margin:0">Entrar</button><button id="logout" class="hidden">Sair</button></div>
+<p class="muted">As contas devem ser criadas/invitadas pelo administrador no painel Supabase. O cadastro público não é disponibilizado.</p>
+<div id="authMsg" class="message hidden" aria-live="polite"></div>
+</section>
+<section id="app" class="hidden">
+<div class="panel statusbar"><div><strong id="who"></strong><div class="muted">Banco centralizado · sincronização ao atualizar a lista</div></div><div class="tools"><button id="refresh">Atualizar lista</button><button id="export" class="green">Exportar CSV</button><button id="logout2">Sair</button></div></div>
+<div class="grid">
+<section class="panel"><h2>Nova cautela</h2>
+<form id="cautionForm">
+<label for="posto">Posto / graduação</label><select id="posto" required><option value="">Selecione...</option><option>Sd PM</option><option>Cb PM</option><option>3º Sgt PM</option><option>2º Sgt PM</option><option>1º Sgt PM</option><option>Subten PM</option><option>2º Ten PM</option><option>1º Ten PM</option><option>Cap PM</option><option>Maj PM</option><option>Ten Cel PM</option></select>
+<label for="nome">Nome de guerra</label><input id="nome" required maxlength="80">
+<label for="re">RE / Dig</label><input id="re" required maxlength="30">
+<label for="whatsapp">WhatsApp (opcional)</label><input id="whatsapp" type="tel" maxlength="20">
+<label for="tmd">TMD</label><select id="tmd"><option value="">Nenhum TMD</option></select>
+<label for="ht">Rádio HT</label><select id="ht"><option value="">Nenhum HT</option></select>
+<label>Materiais / EPIs</label><div class="checklist">
+<label class="check"><input type="checkbox" class="material" value="Colete Refletivo">Colete Refletivo</label>
+<label class="check"><input type="checkbox" class="material" value="Bastão Tonfa">Bastão Tonfa</label>
+<label class="check"><input type="checkbox" class="material" value="BCM-08522">BCM-08522</label>
+<label class="check"><input type="checkbox" class="material" value="BCM-21222">BCM-21222</label>
+<label class="check"><input type="checkbox" class="material" value="BCM-08123">BCM-08123</label>
+</div>
+<label for="outros">Outros materiais</label><input id="outros" maxlength="250" placeholder="Descreva se necessário">
+<button class="primary" type="submit">Registrar cautela</button>
+</form><div id="formMsg" class="message hidden" aria-live="polite"></div>
+</section>
+<section class="panel"><h2>Histórico de cautelas</h2>
+<div class="tools"><input id="search" type="search" placeholder="Pesquisar nome, RE, HT, TMD ou material..."><button data-filter="todos">Todos</button><button data-filter="pendentes">Pendentes</button><button data-filter="devolvidos">Devolvidos</button></div>
+<div class="tablewrap"><table><thead><tr><th>Militar</th><th>Equipamentos / materiais</th><th>Retirada</th><th>Devolução</th><th>Ação</th></tr></thead><tbody id="rows"></tbody></table></div><p id="listMsg" class="muted"></p>
+</section></div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let client=null, currentUser=null, cautelas=[], filter='todos', query='';
+function msg(id,text){const e=$(id);e.textContent=text;e.classList.remove('hidden')}
+function clearMsg(id){$(id).classList.add('hidden');$(id).textContent=''}
+function showAuth(){ $('auth').classList.remove('hidden'); $('app').classList.add('hidden'); $('logout').classList.remove('hidden');}
+function showApp(){ $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('who').textContent=currentUser?.email||'Usuário autorizado';}
+function getStored(){return {url:localStorage.getItem('bpm_supabase_url')||'',key:localStorage.getItem('bpm_supabase_key')||''}}
+async function connect(){
+ const url=$('projectUrl').value.trim(), key=$('publishableKey').value.trim();
+ if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!key){alert('Informe uma URL válida do projeto e a chave pública.');return}
+ localStorage.setItem('bpm_supabase_url',url);localStorage.setItem('bpm_supabase_key',key);
+ client=window.supabase.createClient(url,key);
+ $('config').classList.add('hidden');$('auth').classList.remove('hidden');
+ const {data:{session}}=await client.auth.getSession();if(session){currentUser=session.user;showApp();await loadData();}
+}
+async function login(){clearMsg('authMsg');try{const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;currentUser=data.user;showApp();await loadData()}catch(e){msg('authMsg','Não foi possível entrar. Confira as credenciais e se a conta foi autorizada. '+(e.message||''))}}
+async function logout(){if(client)await client.auth.signOut();currentUser=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden');$('password').value=''}
+function option(select,label,value){const o=document.createElement('option');o.value=value;o.textContent=label;select.append(o)}
+async function loadData(){
+ $('rows').replaceChildren();$('listMsg').textContent='Carregando...';
+ try{
+  const {data:profile,error:pe}=await client.from('profiles').select('role,active,display_name').eq('id',currentUser.id).single();
+  if(pe||!profile?.active)throw new Error('Seu usuário não está ativo. Procure o administrador.');
+  currentUser.role=profile.role;currentUser.display_name=profile.display_name;
+  const {data,error}=await client.from('cautions').select('id,posto,nome,re,whatsapp,materials,created_at,returned_at,created_by,items:caution_items(equipment:equipment!caution_items_equipment_id_fkey(id,kind,label,code))').order('created_at',{ascending:false}).limit(1000);
+  if(error)throw error;cautelas=data||[];
+  await loadEquipment();render();
+  $('who').textContent=`${currentUser.display_name||currentUser.email} · ${currentUser.role}`;
+ }catch(e){$('listMsg').textContent='Erro ao carregar: '+(e.message||'verifique a configuração do banco');}
+}
+async function loadEquipment(){
+ const {data,error}=await client.from('equipment').select('id,kind,label,code,status').order('code');
+ if(error)throw error;
+ const active=cautelas.filter(c=>!c.returned_at).flatMap(c=>(c.items||[]).map(i=>i.equipment?.id).filter(Boolean));
+ for(const [id,kind] of [['tmd','TMD'],['ht','HT']]){
+  const s=$(id);s.replaceChildren();option(s,kind==='TMD'?'Nenhum TMD':'Nenhum HT','');
+  (data||[]).filter(e=>e.kind===kind).forEach(e=>{const occupied=e.status!=='available'||active.includes(e.id);const o=document.createElement('option');o.value=e.id;o.textContent=e.code+' - '+e.label+(occupied?' (Emprestado)':'');o.disabled=occupied;s.append(o)});
+ }
+}
+async function submitCaution(ev){
+ ev.preventDefault();clearMsg('formMsg');
+ const selected=[$('tmd').value,$('ht').value].filter(Boolean);
+ const materials=[...document.querySelectorAll('.material:checked')].map(x=>x.value);if($('outros').value.trim())materials.push($('outros').value.trim());
+ try{
+  const {data,error}=await client.rpc('register_caution',{p_posto:$('posto').value,p_nome:$('nome').value.trim(),p_re:$('re').value.trim(),p_whatsapp:$('whatsapp').value.trim()||null,p_equipment_ids:selected,p_materials:materials});
+  if(error)throw error;$('cautionForm').reset();msg('formMsg','Cautela registrada.');await loadData();
+ }catch(e){msg('formMsg','Não foi possível registrar. O equipamento pode ter sido retirado por outro usuário ou sua conta não tem permissão. '+(e.message||''));await loadData();}
+}
+async function returnCaution(id){if(!confirm('Confirmar devolução desta cautela?'))return;try{const {error}=await client.rpc('return_caution',{p_caution_id:id});if(error)throw error;await loadData()}catch(e){alert('Não foi possível registrar a devolução: '+(e.message||''))}}
+function escText(node,text){node.textContent=text??'';return node}
+function render(){
+ const tbody=$('rows');tbody.replaceChildren();
+ const filtered=cautelas.filter(c=>filter==='todos'||(filter==='pendentes'&&!c.returned_at)||(filter==='devolvidos'&&c.returned_at)).filter(c=>{
+  if(!query.trim())return true;const terms=[c.posto,c.nome,c.re,c.whatsapp,c.materials?.join(' '),...(c.items||[]).flatMap(i=>[i.equipment?.label,i.equipment?.code,i.equipment?.kind])].join(' ').toLocaleLowerCase('pt-BR');return terms.includes(query.trim().toLocaleLowerCase('pt-BR'));
+ }).sort((a,b)=>Number(Boolean(a.returned_at))-Number(Boolean(b.returned_at))||new Date(b.created_at)-new Date(a.created_at));
+ if(!filtered.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='muted';td.textContent='Nenhum registro encontrado.';tr.append(td);tbody.append(tr)}
+ filtered.forEach(c=>{
+  const tr=document.createElement('tr');tr.className=c.returned_at?'returned-row':'pending-row';
+  const m=document.createElement('td');escText(m,`${c.posto} ${c.nome}`);const small=document.createElement('small');small.className='muted';small.textContent=`RE: ${c.re}${c.whatsapp?' · WhatsApp: '+c.whatsapp:''}`;m.append(document.createElement('br'),small);tr.append(m);
+  const items=(c.items||[]).map(i=>i.equipment?`${i.equipment.kind}: ${i.equipment.code} - ${i.equipment.label}`:'').filter(Boolean);
+  const all=items.concat(c.materials||[]);const e=document.createElement('td');e.textContent=all.join('\n')||'Nenhum';e.style.whiteSpace='pre-line';tr.append(e);
+  const d=document.createElement('td');d.textContent=new Date(c.created_at).toLocaleString('pt-BR');tr.append(d);
+  const status=document.createElement('td');status.className=c.returned_at?'returned':'pending';status.textContent=c.returned_at?new Date(c.returned_at).toLocaleString('pt-BR'):'PENDENTE';tr.append(status);
+  const action=document.createElement('td');if(!c.returned_at&&(currentUser.role==='admin'||currentUser.role==='operator')){const b=document.createElement('button');b.className='green';b.textContent='Devolver';b.onclick=()=>returnCaution(c.id);action.append(b)}else action.textContent=c.returned_at?'Concluído':'—';tr.append(action);tbody.append(tr);
+ });
+ $('listMsg').textContent=`Exibindo ${filtered.length} registro(s) · ${cautelas.filter(c=>!c.returned_at).length} pendente(s).`;
+}
+function csv(v){let s=String(v??'');if(/^[=+@\\-\\t\\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+function exportCSV(){const header=['Posto','Nome','RE','WhatsApp','Equipamentos','Materiais','Retirada','Status','Devolução'];const rows=cautelas.map(c=>[c.posto,c.nome,c.re,c.whatsapp,(c.items||[]).map(i=>i.equipment?`${i.equipment.kind} ${i.equipment.code} ${i.equipment.label}`:'').join(' | '),(c.materials||[]).join(' | '),new Date(c.created_at).toLocaleString('pt-BR'),c.returned_at?'Devolvido':'Pendente',c.returned_at?new Date(c.returned_at).toLocaleString('pt-BR'):'']);const content='\\ufeff'+[header,...rows].map(r=>r.map(csv).join(';')).join('\\r\\n');const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='historico_cautelas_7bpm.csv';a.click();URL.revokeObjectURL(url)}
+$('saveConfig').onclick=connect;$('login').onclick=login;$('logout').onclick=logout;$('logout2').onclick=logout;$('refresh').onclick=loadData;$('export').onclick=exportCSV;$('cautionForm').onsubmit=submitCaution;$('search').oninput=e=>{query=e.target.value;render()};document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;render()});
+(async()=>{const c=getStored();$('projectUrl').value=c.url;$('publishableKey').value=c.key;if(c.url&&c.key){client=window.supabase.createClient(c.url,c.key);$('config').classList.add('hidden');$('auth').classList.remove('hidden');const {data:{session}}=await client.auth.getSession();if(session){currentUser=session.user;showApp();await loadData()}}})();
+</script></body></html>
