@@ -335,6 +335,8 @@ async function addEquipment(ev){
 }
 async function loadAdminUsers(){
  const {data,error}=await client.from('profiles').select('id,role,active,display_name').order('display_name');
+console.log('ADMIN USERS:', {data, error});
+alert('Perfis encontrados: ' + (data?.length ?? 0) + (error ? '\nErro: ' + error.message : ''));
  if(error){msg('usersMsg','Erro ao listar usuários: '+error.message);return}
  const tb=$('userRows');tb.replaceChildren();
  for(const u of (data||[])){
