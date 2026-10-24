@@ -333,29 +333,111 @@ async function addEquipment(ev){
   await loadAdminEquipment();await loadEquipment()
  }catch(e){msg('equipmentMsg','Falha ao cadastrar. Confira código duplicado e permissões RLS: '+(e.message||''))}
 }
+ 
 async function loadAdminUsers(){
- const {data,error}=await client.from('profiles').select('id,role,active,display_name').order('display_name');
- if(error){msg('usersMsg','Erro ao listar usuários: '+error.message);return}
- const tb=$('userRows');
-tb.replaceChildren();
-console.log('Usuários recebidos:', data);
- for(const u of (data||[])){
-  const tr=document.createElement('tr'),td1=document.createElement('td');
-  td1.textContent=u.display_name||u.id;td1.title=u.id;tr.append(td1);
-  const td2=document.createElement('td'),role=document.createElement('select');
-  [['operator','Operador'],['admin','Administrador']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;role.append(o)});
-  role.value=u.role||'operator';td2.append(role);tr.append(td2);
-  const td3=document.createElement('td'),active=document.createElement('input');active.type='checkbox';active.checked=!!u.active;td3.append(active);tr.append(td3);
-  const td4=document.createElement('td'),save=document.createElement('button');save.textContent='Salvar';
-  save.onclick=async()=>{
-   if(u.id===currentUser.id&&(!active.checked||role.value!=='admin')){alert('Não é permitido desativar ou rebaixar sua própria conta nesta tela.');return}
-   const {error}=await client.from('profiles').update({role:role.value,active:active.checked}).eq('id',u.id);
-   if(error){msg('usersMsg','Não foi possível atualizar: '+error.message);return}
-   msg('usersMsg','Perfil atualizado.');await loadAdminUsers()
-  };
-  td4.append(save);tr.append(td4)
- }
+  const tb = document.getElementById('userRows');
+  if (!tb) {
+    console.error('Tabela userRows não encontrada');
+    return;
+  }
+
+  tb.replaceChildren();
+  clearMsg('usersMsg');
+
+  const { data, error } = await client
+    .from('profiles')
+    .select('id,role,active,display_name')
+    .order('display_name', { ascending: true });
+
+  if (error) {
+    msg('usersMsg', 'Erro ao listar usuários: ' + error.message);
+    return;
+  }
+
+  const users = Array.isArray(data) ? data : [];
+
+  if (users.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.textContent = 'Nenhum usuário encontrado.';
+    tr.append(td);
+    tb.append(tr);
+    return;
+  }
+
+  for (const u of users) {
+    const tr = document.createElement('tr');
+
+    const nome = document.createElement('td');
+    nome.textContent = u.display_name || u.id;
+    nome.title = u.id;
+    tr.append(nome);
+
+    const perfil = document.createElement('td');
+    const role = document.createElement('select');
+
+    for (const [value, label] of [
+      ['operator', 'Operador'],
+      ['admin', 'Administrador']
+    ]) {
+      const op = document.createElement('option');
+      op.value = value;
+      op.textContent = label;
+      role.append(op);
+    }
+
+    role.value = u.role || 'operator';
+    perfil.append(role);
+    tr.append(perfil);
+
+    const situacao = document.createElement('td');
+    const ativo = document.createElement('input');
+    ativo.type = 'checkbox';
+    ativo.checked = Boolean(u.active);
+    situacao.append(ativo);
+    tr.append(situacao);
+
+    const acao = document.createElement('td');
+    const salvar = document.createElement('button');
+    salvar.type = 'button';
+    salvar.textContent = 'Salvar';
+
+    salvar.onclick = async () => {
+      if (u.id === currentUser.id &&
+          (!ativo.checked || role.value !== 'admin')) {
+        alert('Não é permitido desativar ou rebaixar sua própria conta.');
+        return;
+      }
+
+      salvar.disabled = true;
+
+      const { error: erroAtualizacao } = await client
+        .from('profiles')
+        .update({
+          role: role.value,
+          active: ativo.checked
+        })
+        .eq('id', u.id);
+
+      salvar.disabled = false;
+
+      if (erroAtualizacao) {
+        msg('usersMsg',
+          'Não foi possível atualizar: ' + erroAtualizacao.message);
+        return;
+      }
+
+      msg('usersMsg', 'Perfil atualizado.');
+      await loadAdminUsers();
+    };
+
+    acao.append(salvar);
+    tr.append(acao);
+    tb.append(tr);
+  }
 }
+
 async function resetHistory(){
  clearMsg('resetMsg');
  if(!$('resetConfirm').checked){msg('resetMsg','Marque a confirmação antes de continuar.');return}
