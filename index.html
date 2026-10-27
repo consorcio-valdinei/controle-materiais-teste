@@ -240,7 +240,7 @@ async function loadEquipment(){
   (data||[]).filter(e=>e.kind===kind).forEach(e=>{
    const occupied=e.status!=='available'||active.includes(e.id);
    const o=document.createElement('option');o.value=e.id;
-   o.textContent=e.code+' - '+e.label+(occupied?' (Emprestado)':'');o.disabled=occupied;s.append(o)
+   o.textContent=e.label+(occupied?' (Emprestado)':'');o.disabled=occupied;s.append(o)
   })
  }
 }
@@ -281,7 +281,7 @@ function render(){
   const m=document.createElement('td');m.textContent=`${c.posto} ${c.nome}`;
   const small=document.createElement('small');small.className='muted';small.textContent=`RE: ${c.re}${c.whatsapp?' · WhatsApp: '+c.whatsapp:''}`;
   m.append(document.createElement('br'),small);tr.append(m);
-  const items=(c.items||[]).map(i=>i.equipment?`${i.equipment.kind}: ${i.equipment.code} - ${i.equipment.label}`:'').filter(Boolean);
+  const items=(c.items||[]).map(i=>i.equipment?`${i.equipment.label}`:'').filter(Boolean);
   const all=items.concat(c.materials||[]);
   const e=document.createElement('td');e.textContent=all.join('\n')||'Nenhum';e.style.whiteSpace='pre-line';tr.append(e);
   const d=document.createElement('td');d.textContent=new Date(c.created_at).toLocaleString('pt-BR');tr.append(d);
