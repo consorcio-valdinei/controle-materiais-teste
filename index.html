@@ -237,7 +237,17 @@ async function loadEquipment(){
  const active=cautelas.filter(c=>!c.returned_at).flatMap(c=>(c.items||[]).map(i=>i.equipment?.id).filter(Boolean));
  for(const [id,kind] of [['tmd','TMD'],['ht','HT']]){
   const s=$(id);s.replaceChildren();option(s,kind==='TMD'?'Nenhum TMD':'Nenhum HT','');
-  (data||[]).filter(e=>e.kind===kind).forEach(e=>{
+  (data||[])
+  .filter(e=>e.kind===kind)
+  .sort((a,b)=>{
+    if(kind==='TMD'){
+      const na=parseInt(a.label,10);
+      const nb=parseInt(b.label,10);
+      return na-nb;
+    }
+    return Number(a.code)-Number(b.code);
+  })
+  .forEach(e=>{
    const occupied=e.status!=='available'||active.includes(e.id);
    const o=document.createElement('option');o.value=e.id;
    o.textContent=e.label+(occupied?' (Emprestado)':'');o.disabled=occupied;s.append(o)
