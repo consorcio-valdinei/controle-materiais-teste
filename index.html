@@ -105,7 +105,9 @@ th{background:#f1f5f9;font-size:.75rem;text-transform:uppercase}
 <h3>Cadastrar material / equipamento</h3>
 <form id="equipmentForm">
 <div class="admin-grid">
-<div><label for="eqKind">Tipo</label><select id="eqKind" required><option value="TMD">TMD</option><option value="HT">HT</option></select></div>
+<div><label for="eqKind">Tipo</label><input id="eqKind" type="text"
+placeholder="Digite o tipo de material"
+maxlength="40" required></div>
 <div><label for="eqCode">Código</label><input id="eqCode" maxlength="80" required></div>
 <div><label for="eqLabel">Descrição</label><input id="eqLabel" maxlength="120" required></div>
 </div>
@@ -433,6 +435,41 @@ async function loadAdminUsers(){
     };
 
     acao.append(salvar);
+<<<<<<< HEAD
+  const redefinir = document.createElement('button');
+redefinir.type = 'button';
+redefinir.textContent = 'Redefinir senha';
+
+redefinir.onclick = async () => {
+  const email = prompt('Digite o e-mail do usuário:');
+  if (!email) return;
+
+  const novaSenha = prompt('Digite a nova senha (mínimo 8 caracteres):');
+  if (!novaSenha || novaSenha.length < 8) {
+    alert('A senha deve ter pelo menos 8 caracteres.');
+    return;
+  }
+
+  redefinir.disabled = true;
+
+  try {
+    const { error } = await client.functions.invoke(
+      'admin-reset-password',
+      { body: { email, newPassword: novaSenha } }
+    );
+
+    if (error) throw error;
+
+    alert('Senha redefinida com sucesso!');
+  } catch (error) {
+    alert('Erro ao redefinir: ' + error.message);
+  } finally {
+    redefinir.disabled = false;
+  }
+};
+
+acao.append(redefinir);
+=======
    const redefinir = document.createElement('button');
 redefinir.type = 'button';
 redefinir.textContent = 'Redefinir senha';
@@ -466,6 +503,7 @@ redefinir.onclick = async () => {
 };
 
 acao.append(redefinir);
+>>>>>>> c93870877356ce0c66fe668d42caa6f230d63046
     tr.append(acao);
     tb.append(tr);
   }
@@ -508,8 +546,7 @@ document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.da
   client=window.supabase.createClient(c.url,c.key);
   $('config').classList.add('hidden');$('auth').classList.remove('hidden');
   const {data:{session}}=await client.auth.getSession();
-  if(session){currentUser=session.user;showApp();await loadData()}
- }
+  if(session){currentUser=session.user;showApp();await loadData()}% }
 })();
 </script>
 </body>
